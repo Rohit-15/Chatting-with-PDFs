@@ -9,6 +9,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.llms.openai import OpenAI
 
 #load_dotenv()
+openai_api_key = st.secrets["openai"]["api_key"]
 def main():
 
     st.set_page_config(page_title='Chatting with PDFs')
@@ -32,7 +33,7 @@ def main():
         
 
 
-        embeddings=OpenAIEmbeddings(openai_api_key=st.secrets["openai"]["api_key"])
+        embeddings=OpenAIEmbeddings(openai_api_key=openai_api_key)
         knowledge_base=FAISS.from_texts(chunks,embeddings)
 
         user_question= st.text_input('Ask a question:')
@@ -40,7 +41,7 @@ def main():
 
         
 
-        llm=OpenAI(openai_api_key=st.secrets["openai"]["api_key"])
+        llm=OpenAI(openai_api_key=openai_api_key)
         chain=load_qa_chain(llm,chain_type='stuff')
         response=chain.run(input_documents=docs,question=user_question)
         st.write(response)
