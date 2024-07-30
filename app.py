@@ -8,7 +8,7 @@ from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.llms.openai import OpenAI
 
-#load_dotenv()
+
 openai_api_key=st.secrets["openai"]["api_key"]
 
 def main():
