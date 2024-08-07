@@ -47,7 +47,7 @@ def main():
                     chain = load_qa_chain(llm, chain_type='stuff')
                     response = chain.run(input_documents=docs, question=user_question)
                     
-                    st.write("Answer: /n", response)
+                    st.write("Answer:","\n", response)
                 except Exception as e:
                     st.error(f"An error occurred: {str(e)}")
     else:
