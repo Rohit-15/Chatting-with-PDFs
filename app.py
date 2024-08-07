@@ -41,7 +41,7 @@ def main():
                 st.warning("Please enter a valid question.")
             else:
                 try:
-                    docs = knowledge_base.similarity_search(user_question)
+                    docs = knowledge_base.similarity_search(user_question,k=5, threshold=0.75)
                     
                     llm = OpenAI(openai_api_key=openai_api_key)
                     chain = load_qa_chain(llm, chain_type='stuff')
