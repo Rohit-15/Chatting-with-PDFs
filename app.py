@@ -6,6 +6,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.llms.openai import OpenAI
+from langchain.prompts import PromptTemplate
 
 openai_api_key = st.secrets["openai"]["api_key"]
 
@@ -41,18 +42,36 @@ def main():
                 st.warning("Please enter a valid question.")
             else:
                 try:
-                    docs = knowledge_base.similarity_search(user_question)
+                    docs = knowledge_base.similarity_search(user_question, k=5, score_threshold=0.7)
                     
-                    llm = OpenAI(openai_api_key=openai_api_key)
-                    chain = load_qa_chain(llm, chain_type='stuff')
-                    response = chain.run(input_documents=docs, question=user_question)
-                    
-                    st.write("Answer:")
-                    st.write(response)
+                    if docs:
+                        llm = OpenAI(
+                            openai_api_key=openai_api_key,
+                            model_name="gpt-3.5-turbo",
+                            temperature=0.3,
+                            max_tokens=150
+                        )
+                        prompt_template = """You are an AI assistant that answers questions based solely on the given context. If the answer cannot be found in the context, say "I don't have enough information to answer that question based on the PDF content." Do not use any external knowledge.
+
+                        Context: {context}
+
+                        Question: {question}
+
+                        Answer: """
+                        PROMPT = PromptTemplate(
+                            template=prompt_template, input_variables=["context", "question"]
+                        )
+                        chain = load_qa_chain(llm, chain_type="stuff", prompt=PROMPT)
+                        response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
+                        answer = response['output_text']
+                        if answer.strip():
+                            st.write("Answer:")
+                            st.write(answer)
+                        else:
+                            st.warning("The answer to your question is not found in the PDF.")
+                    else:
+                        st.warning("No relevant information found in the PDF.")
                 except Exception as e:
                     st.error(f"An error occurred: {str(e)}")
     else:
         st.info("Please upload a PDF to start asking questions.")
-
-if __name__ == '__main__':
-    main()
