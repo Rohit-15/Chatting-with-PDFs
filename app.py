@@ -41,14 +41,20 @@ def main():
                 st.warning("Please enter a valid question.")
             else:
                 try:
-                    docs = knowledge_base.similarity_search(user_question,k=5)
+                    docs = knowledge_base.similarity_search(user_question, k=5)
                     
-                    llm = OpenAI(openai_api_key=openai_api_key)
-                    chain = load_qa_chain(llm, chain_type='stuff')
-                    response = chain.run(input_documents=docs, question=user_question)
-                    
-                    st.write("Answer:")
-                    st.write(response)
+                    if not docs:
+                        st.warning("No relevant information found in the PDF.")
+                    else:
+                        llm = OpenAI(openai_api_key=openai_api_key)
+                        chain = load_qa_chain(llm, chain_type='stuff')
+                        response = chain.run(input_documents=docs, question=user_question)
+                        
+                        if response.strip():
+                            st.write("Answer:")
+                            st.write(response)
+                        else:
+                            st.warning("The answer to your question is not found in the PDF.")
                 except Exception as e:
                     st.error(f"An error occurred: {str(e)}")
     else:
