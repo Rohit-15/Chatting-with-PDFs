@@ -35,17 +35,18 @@ def main():
         if user_question:
             docs = knowledge_base.similarity_search(user_question, k=5)  # Retrieve top 5 similar chunks
 
-            # Check if there are any relevant documents based on a similarity threshold (optional)
-            # If using a similarity threshold, ensure docs include similarity scores and filter accordingly
-            if docs:
+            if docs:  # If documents are found
+                # You can add a check for minimum similarity score here if needed
                 llm = OpenAI(openai_api_key=openai_api_key)
                 chain = load_qa_chain(llm, chain_type='stuff')
 
-                # Explicitly state in the prompt to answer based on the provided documents
                 response = chain.run(input_documents=docs, question=user_question)
-                st.write(response)
+                if response.strip():
+                    st.write(response)
+                else:
+                    st.write("This question is not relevant to the content present in the PDF.")
             else:
-                st.write("This question is not relevant to the content present in the PDF")
+                st.write("This question is not relevant to the content present in the PDF.")
 
 if __name__ == '__main__':
     main()
