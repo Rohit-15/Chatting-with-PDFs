@@ -23,8 +23,8 @@ def main():
         
         splitting_text = CharacterTextSplitter(
             separator="\n",
-            chunk_size=500,  # Adjusted chunk size for better segmentation
-            chunk_overlap=200,  # Adjusted overlap for smoother transitions
+            chunk_size=1000,
+            chunk_overlap=250,
             length_function=len
         )
         chunks = splitting_text.split_text(text)
@@ -41,35 +41,18 @@ def main():
                 st.warning("Please enter a valid question.")
             else:
                 try:
-                    docs = knowledge_base.similarity_search(user_question, k=5)
+                    docs = knowledge_base.similarity_search(user_question,k=5, threshold=0.75)
                     
-                    if not docs:
-                        st.warning("No relevant information found in the PDF.")
-                    else:
-                        # Filter documents based on relevance to the question
-                        relevant_docs = [doc for doc in docs if is_relevant(doc, user_question)]
-                        
-                        if len(relevant_docs) > 0:
-                            llm = OpenAI(openai_api_key=openai_api_key)
-                            chain = load_qa_chain(llm, chain_type='specific_to_pdf_content')  # Use a more specific QA chain
-                            response = chain.run(input_documents=relevant_docs, question=user_question)
-                            
-                            if response.strip():
-                                st.write("Answer:")
-                                st.write(response)
-                            else:
-                                st.warning("The answer to your question is not found in the PDF.")
-                        else:
-                            st.warning("No relevant documents found after filtering.")
+                    llm = OpenAI(openai_api_key=openai_api_key)
+                    chain = load_qa_chain(llm, chain_type='stuff')
+                    response = chain.run(input_documents=docs, question=user_question)
+                    
+                    st.write("Answer:")
+                    st.write(response)
                 except Exception as e:
                     st.error(f"An error occurred: {str(e)}")
     else:
         st.info("Please upload a PDF to start asking questions.")
-
-def is_relevant(document, question):
-    # Implement logic to determine if a document is relevant to the question
-    # This could involve comparing the document's content with the question
-    pass
 
 if __name__ == '__main__':
     main()
