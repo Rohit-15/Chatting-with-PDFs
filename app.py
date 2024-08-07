@@ -11,9 +11,10 @@ openai_api_key = st.secrets["openai"]["api_key"]
 
 def main():
     st.set_page_config(page_title='Chatting with PDFs')
-    st.header("Let's Chat with Your PDF")
-    pdf = st.file_uploader('Upload your PDF here', type=['pdf'])
+    st.header("Let's Chat")
 
+    pdf = st.file_uploader('Upload your PDF here', type=['pdf'])
+    
     if pdf is not None:
         reader = PdfReader(pdf)
         text = ""
@@ -27,25 +28,30 @@ def main():
             length_function=len
         )
         chunks = splitting_text.split_text(text)
-
+        
         embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         knowledge_base = FAISS.from_texts(chunks, embeddings)
-
-        user_question = st.text_input('Ask a question:')
+        
+        st.success("PDF uploaded and processed successfully!")
+        
+        user_question = st.text_input('Ask a question about the PDF:')
+        
         if user_question:
-            docs = knowledge_base.similarity_search(user_question, k=5)  # Retrieve top 5 similar chunks
-
-            # Check if there are any relevant documents based on a similarity threshold (optional)
-            # If using a similarity threshold, ensure docs include similarity scores and filter accordingly
-            if docs:
-                llm = OpenAI(openai_api_key=openai_api_key)
-                chain = load_qa_chain(llm, chain_type='stuff')
-
-                # Explicitly state in the prompt to answer based on the provided documents
-                response = chain.run(input_documents=docs, question=user_question)
-                st.write(response)
+            if not user_question.strip():
+                st.warning("Please enter a valid question.")
             else:
-                st.write("The question may not be relevant to the provided document.")
+                try:
+                    docs = knowledge_base.similarity_search(user_question)
+                    
+                    llm = OpenAI(openai_api_key=openai_api_key)
+                    chain = load_qa_chain(llm, chain_type='stuff')
+                    response = chain.run(input_documents=docs, question=user_question)
+                    
+                    st.write("Answer:", response)
+                except Exception as e:
+                    st.error(f"An error occurred: {str(e)}")
+    else:
+        st.info("Please upload a PDF to start asking questions.")
 
 if __name__ == '__main__':
     main()
