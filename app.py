@@ -6,6 +6,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.llms.openai import OpenAI
+from langchain.prompts import PromptTemplate
 
 openai_api_key = st.secrets["openai"]["api_key"]
 
@@ -42,9 +43,14 @@ def main():
             else:
                 try:
                     docs = knowledge_base.similarity_search(user_question,k=5, threshold=0.75)
+
+                    custom_prompt = PromptTemplate(
+                        input_variables=["context", "question"],
+                        template="Given the context below,answer the question. If answer is not in the context, say Please Ask a Question pertaining to the PDF.:\n\nContext: {context}\n\nQuestion: {question}\n\nAnswer:")
+
                     
                     llm = OpenAI(openai_api_key=openai_api_key)
-                    chain = load_qa_chain(llm, chain_type='stuff')
+                    chain = load_qa_chain(llm, chain_type='stuff',prompt=custom_prompt)
                     response = chain.run(input_documents=docs, question=user_question)
                     
                     st.write("Answer:")
