@@ -45,6 +45,7 @@ def main():
                     
                     llm = OpenAI(openai_api_key=openai_api_key)
                     chain = load_qa_chain(llm, chain_type='stuff')
+                    import pdb; pdb.set_trace()
                     response = chain.run(input_documents=docs, question=user_question)
                     
                     st.write("Answer:")
